@@ -1,0 +1,64 @@
+version: '3'
+
+services:
+
+  mariadb:
+    build: ./requirements/mariadb
+    image: mariadb
+    container_name: mariadb
+    ports:
+      - '3306:3306'
+    networks:
+      - incep_net
+    volumes:
+      - wordpress_db:/var/lib/mysql/wordpress
+    env_file: .env
+    restart: always
+
+  wordpress:
+    build: ./requirements/wordpress
+    image: wordpress
+    container_name: wordpress
+    ports:
+      - '9000:9000'
+    env_file: .env
+    volumes:
+      - wordpress_files:/var/www/html
+    depends_on:
+      - mariadb
+    networks:
+      - incep_net  
+    restart: always
+  
+  nginx:
+    build: ./requirements/nginx
+    image: nginx
+    container_name: nginx
+    ports:
+      - '443:443'
+    volumes:
+      - wordpress_files:/var/www/html
+    depends_on:
+      - wordpress
+    networks:
+      - incep_net
+    restart: always
+
+networks:
+  incep_net:
+
+volumes:
+
+  wordpress_files:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/tkhabous/data/wp_files
+
+  wordpress_db:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/tkhabous/data/wp_database
